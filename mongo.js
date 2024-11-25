@@ -25,6 +25,13 @@ const noteSchema = new mongoose.Schema({
 
 const Person = mongoose.model('Person', noteSchema)
 
+if (process.argv.length > 5){
+	console.log('The program takes:\n' +
+	'`node mongo.js password` to list all of the contacts and\n' +
+	'`node mongo.js password name number` to add a new contact.')
+	process.exit(1)
+  }
+
 if (process.argv.length<4) {
 	console.log('phonebook:')
 	Person.find({}).then(result => {
