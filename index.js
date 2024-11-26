@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 var morgan = require('morgan')
 const cors = require('cors')
+require('dotenv').config()
 
 app.use(cors())
 app.use(express.json())
@@ -9,6 +10,8 @@ app.use(express.static('dist'))
 
 morgan.token('body', (req) => JSON.stringify(req.body))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
+
+const Person = require('./models/person')
 
 let persons = [
     {
@@ -40,7 +43,9 @@ let persons = [
   })
 
   app.get('/api/persons', (request, response) => {
-	response.json(persons)
+	  Person.find({}).then(persons => {
+      response.json(persons)
+    })
   })
 
   app.get('/api/persons/:id', (request, response) => {
@@ -60,47 +65,32 @@ let persons = [
     response.status(204).end()
   })
 
-  const getRandomId = () => {
-    let randomNumber
-    do {
-        randomNumber = Math.floor(Math.random() * 9999)
-    } while (persons.some(person => person.id === randomNumber))
-    return String(randomNumber)
-  }
+  // const getRandomId = () => {
+  //   let randomNumber
+  //   do {
+  //       randomNumber = Math.floor(Math.random() * 9999)
+  //   } while (persons.some(person => person.id === randomNumber))
+  //   return String(randomNumber)
+  // }
 
   app.post('/api/persons', (request, response) => {
     const body = request.body
 
-	if (!body.name) {
-		return response.status(400).json({
-		  error: 'No name provided'
-		})
-	  }
-
-	if (!body.number) {
-		return response.status(400).json({
-		  error: 'No number provided'
-		})
-	}
-    const personName = persons.find(person => person.name === body.name)
-    if (personName){
-		return response.status(400).json({
-		  error: 'Person with that name already exists'
-		})
-	  }
-
-    person = {
-      id: getRandomId(),
-      name: body.name,
-      number: body.number,
+    if (!body.name || !body.number) {
+      return response.status(400).json({ error: 'name or number missing' })
     }
 
-    persons.concat.apply(person)
-    response.json(person)
+    const person = new Person({
+      name: body.name,
+      number: body.number,
+    })
+
+    person.save().then(savedPerson => {
+      response.json(savedPerson)
+    })
   })
 
-
-  const PORT = process.env.PORT || 3000
+  const PORT = process.env.PORT
   app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`)
   })
