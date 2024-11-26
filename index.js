@@ -99,7 +99,13 @@ app.post('/api/persons', (request, response, next) => {
   person.save().then(savedPerson => {
     response.json(savedPerson)
   })
-  .catch(error => next(error))
+  .catch(error => {
+    if (error.name === 'ValidationError') {
+      response.status(400).json({ error: error.message });
+    } else {
+      next(error);
+    }
+  });
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
