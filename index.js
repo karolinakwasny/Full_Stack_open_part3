@@ -49,10 +49,13 @@ let persons = [
     }
   ]
 
-  app.get('/info', (request, response) => {
-    const numberOfPersons = persons.length
-    const currentDate = new Date().toString()
-    response.send(`Phonebook has info for ${numberOfPersons} people <p>${currentDate}</p>`)
+  app.get('/info', (request, response, next) => {
+    Person.countDocuments()
+      .then((numberOfPersons) => {
+        const currentDate = new Date().toString()
+        response.send(`Phonebook has info for ${numberOfPersons} people <p>${currentDate}</p>`)
+      })
+      .catch(error => next(error))
   })
 
   app.get('/api/persons', (request, response) => {
@@ -81,7 +84,7 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   if (!body.name || !body.number) {
@@ -96,6 +99,7 @@ app.post('/api/persons', (request, response) => {
   person.save().then(savedPerson => {
     response.json(savedPerson)
   })
+  .catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
