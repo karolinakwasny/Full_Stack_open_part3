@@ -9,16 +9,16 @@ app.use(express.json())
 app.use(express.static('dist'))
 
 const errorHandler = (error, request, response, next) => {
-	console.error(error.message)
+  console.error(error.message)
 
-	if (error.name === 'CastError') {
-		return response.status(400).send({ error: 'malformatted id' })
-	}
-	next(error)
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+  next(error)
 }
 
 const unknownEndpoint = (request, response) => {
-	response.status(404).send({ error: 'unknown endpoint' })
+  response.status(404).send({ error: 'unknown endpoint' })
 }
 
 morgan.token('body', (req) => JSON.stringify(req.body))
@@ -45,21 +45,20 @@ app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id)
     .then(person => {
       if (person) {
-      response.json(person)
-    } else {
-      response.status(404).end()
-    }})
+        response.json(person)
+      } else {
+        response.status(404).end()
+      }})
     .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndDelete(request.params.id)
-  .then(result => {
-    response.status(204).end()
-  })
-  .catch(error => next(error))
+    .then(() => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
 })
-
 
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
@@ -76,28 +75,28 @@ app.post('/api/persons', (request, response, next) => {
   person.save().then(savedPerson => {
     response.json(savedPerson)
   })
-  .catch(error => {
-    if (error.name === 'ValidationError') {
-      response.status(400).json({ error: error.message });
-    } else {
-      next(error);
-    }
-  });
+    .catch(error => {
+      if (error.name === 'ValidationError') {
+        response.status(400).json({ error: error.message })
+      } else {
+        next(error)
+      }
+    })
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-	const body = request.body
+  const body = request.body
 
-	const person = {
-		name: body.name,
-		number: body.number,
-	}
+  const person = {
+    name: body.name,
+    number: body.number,
+  }
 
-	Person.findByIdAndUpdate(request.params.id, person, { new: true })
-	.then(updatedPerson => {
-		response.json(updatedPerson)
-	})
-	.catch(error => next(error))
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then(updatedPerson => {
+      response.json(updatedPerson)
+    })
+    .catch(error => next(error))
 })
 
 app.use(unknownEndpoint)
